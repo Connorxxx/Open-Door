@@ -1,6 +1,7 @@
 package com.connor.opendoor.repositorys
 
 import com.connor.opendoor.datasources.network.DoorSource
+import com.connor.opendoor.error.NetworkError
 import com.connor.opendoor.intents.ResponseState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -18,13 +19,17 @@ class NetworkRepository @Inject constructor(
     }.onStart {
         emit(ResponseState.Loading)
     }.onCompletion {
-        delay(3.seconds)
+        delay(5.seconds)
         emit(ResponseState.Idle)
     }
 
     private suspend fun open() = doorSource.open().fold(
         ifLeft = {
-            ResponseState.Error(it)
+            when (it) {
+                is NetworkError.Request -> ResponseState.Error(it.message, "Request failed, check network connection")
+                is NetworkError.HttpStatus -> ResponseState.Error(it.code.toString(), "Http status error code: ${it.code}")
+                is NetworkError.Response -> ResponseState.Error(it.content, "Response error")
+            }
         },
         ifRight = {
             ResponseState.Success(it)

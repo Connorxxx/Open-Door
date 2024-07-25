@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -80,7 +82,7 @@ private fun Home(
             modifier = Modifier.width(140.dp),
             enabled = responseState != ResponseState.Loading
         ) {
-            if (responseState == ResponseState.Loading) CircularProgressIndicator(
+            if (responseState is ResponseState.Loading) CircularProgressIndicator(
                 modifier = Modifier
                     .padding(end = 12.dp)
                     .width(20.dp)
@@ -92,14 +94,20 @@ private fun Home(
                 text = when (responseState) {
                     is ResponseState.Error -> "Error 💩"
                     is ResponseState.Idle -> "Open"
-                    is ResponseState.Loading -> ""
                     is ResponseState.Success -> "Success 😁"
+                    ResponseState.Loading -> ""
                 },
                 color = Color.White,
                 fontSize = 18.sp,
                 maxLines = 1
             )
         }
+        Text(
+            text = if (responseState is ResponseState.Error) responseState.tips else "",
+            modifier = Modifier.padding(top = 12.dp),
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
     }
 }
 
