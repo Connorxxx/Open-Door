@@ -19,7 +19,7 @@ class NetworkRepository @Inject constructor(
     }.onStart {
         emit(ResponseState.Loading)
     }.onCompletion {
-        delay(5.seconds)
+        delay(3.seconds)
         emit(ResponseState.Idle)
     }
 

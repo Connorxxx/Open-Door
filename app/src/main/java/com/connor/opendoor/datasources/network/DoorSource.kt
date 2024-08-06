@@ -1,6 +1,5 @@
 package com.connor.opendoor.datasources.network
 
-import android.util.Log
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensure
@@ -12,6 +11,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class DoorSource @Inject constructor(
@@ -24,14 +26,8 @@ class DoorSource @Inject constructor(
     private suspend fun openDoor() =
         client.post("https://zhgm.yrcid.com:15615/api/index.php/v18/doors/open") {
             headers {
-                append(
-                    "Authorization",
-                    "Basic bGFqZm55cXhyazZ1aHRwM3NkNG0wejd3MTk1djJiZW86OHljYXF1aGQxeDRmMnozZ2U2dzkwcHJsNW1qb3R2bmk="
-                )
-                append(
-                    "doordu-system",
-                    """{"app_version":"2.0.7.005","system_version":"12","system_models":"GM1910","system_type":0}"""
-                )
+                append("Authorization", "Basic bGFqZm55cXhyazZ1aHRwM3NkNG0wejd3MTk1djJiZW86OHljYXF1aGQxeDRmMnozZ2U2dzkwcHJsNW1qb3R2bmk=")
+                append("doordu-system", """{"app_version":"2.0.7.005","system_version":"12","system_models":"GM1910","system_type":0}""")
                 append("Package-Name", "com.guangmingzmt.oem")
                 append("Accept-Language", "zh-CN")
                 append("X-Enc-Level", "2")
@@ -42,14 +38,14 @@ class DoorSource @Inject constructor(
 
     suspend fun open() = either {
         val response = catch({ openDoor() }) {
-            raise(NetworkError.Request(it.message ?: "Unknown Error"))
+            raise(NetworkError.Request(it.message ?: "Unknown Request Error"))
         }
         "openDoor response: $response".logCat()
         ensure(response.status == HttpStatusCode.OK) {
             raise(NetworkError.HttpStatus(response.status))
         }
         response.bodyAsText().also {
-            ensure(!it.startsWith("{")) {
+            ensure(!it.startsWith("{") && !it.endsWith("}")) {
                 raise(NetworkError.Response(it))
             }
         }

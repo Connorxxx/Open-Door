@@ -21,17 +21,16 @@ class HomeViewModel @Inject constructor(
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
 
-    private fun open() = networkRepository.getResponseState()
-        .onEach { state ->
-            _state.update {
-                it.copy(responseState = state)
-            }
-        }.launchIn(viewModelScope)
-
     fun onEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.Open -> open()
         }
     }
+
+    private fun open() = networkRepository.getResponseState().onEach { state ->
+        _state.update {
+            it.copy(responseState = state)
+        }
+    }.launchIn(viewModelScope)
 
 }
